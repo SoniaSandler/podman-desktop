@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { ProviderLinks } from '@podman-desktop/api';
+import { router } from 'tinro';
 
 import { providerInfos } from '../../stores/providers';
 import FormPage from '../ui/FormPage.svelte';
@@ -62,6 +63,15 @@ $: contributedLinks = $providerInfos
             <p class="py-2 md:text-ellipsis md:overflow-hidden">Extend podman desktop</p>
             <i
               class="opacity-0 group-hover:opacity-100 fas fa-solid fa-external-link-alt ml-2 transition-opacity delay-150 duration-150 ease-in-out"
+              aria-hidden="true"></i>
+          </button>
+          <button
+            class="group flex items-baseline md:text-right w-full md:whitespace-nowrap pr-2 cursor-pointer md:border-r-2 text-[var(--pd-button-help-link-text)]"
+            on:click="{() => router.goto('/cliHelp')}"
+            title="CLI help">
+            <p class="py-2 md:text-ellipsis md:overflow-hidden">Learn Podman CLI commands</p>
+            <i
+              class="opacity-0 group-hover:opacity-100 fas fa-solid ml-2 transition-opacity delay-150 duration-150 ease-in-out"
               aria-hidden="true"></i>
           </button>
         </div>

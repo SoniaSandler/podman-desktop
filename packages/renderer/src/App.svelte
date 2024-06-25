@@ -25,6 +25,7 @@ import DockerExtension from './lib/docker-extension/DockerExtension.svelte';
 import ExtensionDetails from './lib/extensions/ExtensionDetails.svelte';
 import ExtensionList from './lib/extensions/ExtensionList.svelte';
 import SendFeedback from './lib/feedback/SendFeedback.svelte';
+import CliHelp from './lib/help/CliHelp.svelte';
 import HelpPage from './lib/help/HelpPage.svelte';
 import BuildImageFromContainerfile from './lib/image/BuildImageFromContainerfile.svelte';
 import ImageDetails from './lib/image/ImageDetails.svelte';
@@ -129,6 +130,11 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
         <Route path="/images" breadcrumb="Images" navigationHint="root">
           <ImagesList />
         </Route>
+
+        <Route path="/cliHelp" breadcrumb="CLIHelp">
+          <CliHelp />
+        </Route>
+
         <Route
           path="/manifests/:id/:engineId/:base64RepoTag/*"
           breadcrumb="Manifest Details"

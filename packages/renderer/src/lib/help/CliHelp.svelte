@@ -22,7 +22,7 @@ let pullCommand: CommandUI = {
 };
 
 let runCommand: CommandUI = {
-  startCommand: 'podman run',
+  startCommand: 'podman run ',
   firstCommand: 'podman run quay.io/podman/hello',
   commandLine: 'podman run quay.io/podman/hello',
   checked: {
@@ -44,7 +44,7 @@ let runCommand: CommandUI = {
 };
 
 let buildCommand: CommandUI = {
-  startCommand: 'podman build',
+  startCommand: 'podman build ',
   firstCommand: 'podman build .',
   commandLine: 'podman build .',
   checked: {
@@ -62,9 +62,9 @@ let buildCommand: CommandUI = {
 };
 
 let podCreateCommand: CommandUI = {
-  startCommand: 'podman pod create',
+  startCommand: 'podman pod create ',
   firstCommand: 'podman pod create',
-  commandLine: 'podman pod create',
+  commandLine: 'podman pod create ',
   checked: {
     name: false,
     label: false,
@@ -151,7 +151,7 @@ function podCreateChecked() {
   podCreateCommand.commandLine = podCreateCommand.startCommand;
   podCreateCommand.commandLine +=
     podCreateCommand.checked.label && !emptyKey
-      ? ` -l ${podCreateCommand.values.key}` + (!emptyValue ? `=${podCreateCommand.values.value}` : '')
+      ? ` -l ${podCreateCommand.values.key}` + (!emptyValue ? `=${podCreateCommand.values.value} ` : ' ')
       : '';
   podCreateCommand.commandLine +=
     podCreateCommand.checked.volumes && !emptyVolumes

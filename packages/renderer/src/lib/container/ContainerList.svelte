@@ -28,6 +28,7 @@ import { providerInfos } from '../../stores/providers';
 import { findMatchInLeaves } from '../../stores/search-util';
 import { viewsContributions } from '../../stores/views';
 import type { ContextUI } from '../context/context';
+import { withConfirmation } from '../dialogs/messagebox-utils';
 import type { EngineInfoUI } from '../engine/EngineInfoUI';
 import Prune from '../engine/Prune.svelte';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
@@ -379,7 +380,7 @@ $: containersAndGroups = containerGroups.map(group =>
     {#if selectedItemsNumber > 0}
       <div class="inline-flex space-x-2">
         <Button
-          on:click="{() => deleteSelectedContainers()}"
+          on:click="{() => withConfirmation(deleteSelectedContainers, `delete ${selectedItemsNumber} containers`)}"
           aria-label="Delete selected containers and pods"
           title="Delete {selectedItemsNumber} selected items"
           bind:inProgress="{bulkDeleteInProgress}"

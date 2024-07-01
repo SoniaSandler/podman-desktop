@@ -104,7 +104,7 @@ async function sendFeedback(): Promise<void> {
           id="tellUsWhyFeedback"
           data-testid="tellUsWhyFeedback"
           bind:value="{tellUsWhyFeedback}"
-          class="w-full p-2 outline-none text-sm bg-charcoal-800 rounded-sm text-gray-700 placeholder-gray-700"
+          class="w-full p-2 outline-none text-sm bg-[var(--pd-input-field-focused-bg)] rounded-sm text-[var(--pd-input-field-focused-text)] placeholder-[var(--pd-input-field-placeholder-text)]"
           placeholder="Please enter your feedback here, we appreciate and review all comments"></textarea>
 
         <label for="contactInformation" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
@@ -115,7 +115,7 @@ async function sendFeedback(): Promise<void> {
           id="contactInformation"
           bind:value="{contactInformation}"
           placeholder="Enter email address, or leave blank for anonymous feedback"
-          class="w-full p-2 outline-none text-sm bg-charcoal-800 rounded-sm text-gray-700 placeholder-gray-700" />
+          class="w-full p-2 outline-none text-sm bg-[var(--pd-input-field-focused-bg)] rounded-sm text-[var(--pd-input-field-focused-text)] placeholder-[var(--pd-input-field-placeholder-text)]" />
 
         <div class="pt-5 flex flex-row w-full justify-between">
           <div>

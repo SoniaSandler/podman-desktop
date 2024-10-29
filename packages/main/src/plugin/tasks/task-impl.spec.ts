@@ -104,6 +104,21 @@ describe('update field should send an update event', () => {
       }),
     });
   });
+
+  test('visible', () => {
+    const onUpdateListenerMock = vi.fn<(e: TaskUpdateEvent) => void>();
+    const task = new TaskImpl('test-id', 'Test name');
+    task.onUpdate(onUpdateListenerMock);
+
+    expect(task.visible).toBe(true);
+    task.visible = false;
+    expect(onUpdateListenerMock).toHaveBeenCalledWith({
+      action: 'update',
+      task: expect.objectContaining({
+        visible: false,
+      }),
+    });
+  });
 });
 
 test('dispose should send a delete TaskUpdateEvent', () => {

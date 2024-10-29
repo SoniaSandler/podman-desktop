@@ -72,6 +72,7 @@ export class TaskImpl implements Task {
 
   set visible(visible: boolean) {
     this.mVisible = visible;
+    this.notify();
   }
 
   get status(): TaskStatus {

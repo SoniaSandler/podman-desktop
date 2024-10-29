@@ -32,6 +32,7 @@ export class TaskImpl implements Task {
   protected mState: TaskState;
   protected mStatus: TaskStatus;
   protected mName: string;
+  protected mVisible: boolean = true;
 
   constructor(
     public readonly id: string,
@@ -63,6 +64,14 @@ export class TaskImpl implements Task {
   set state(state: TaskState) {
     this.mState = state;
     this.notify();
+  }
+
+  get visible(): boolean {
+    return this.mVisible;
+  }
+
+  set visible(visible: boolean) {
+    this.mVisible = visible;
   }
 
   get status(): TaskStatus {

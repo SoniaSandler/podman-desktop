@@ -384,6 +384,11 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
     operationStarted = true;
     operationFailed = false;
     operationCancelled = false;
+    console.log('>>>>>>>>>>>>>>>>>');
+    for (const value in data) {
+      console.log(`${value}: ${data[value]}`);
+    }
+    console.log('>>>>>>>>>>>>>>>>>');
 
     try {
       tokenId = await window.getCancellableTokenSource();

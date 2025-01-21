@@ -354,7 +354,7 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
   if (e.target instanceof HTMLFormElement) {
     const formData = new FormData(e.target);
 
-    const data: { [key: string]: unknown } = {};
+    let data: { [key: string]: unknown } = {};
 
     // handle checkboxes that are not submitted in case of unchecked
     // get all configuration keys
@@ -385,6 +385,14 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
     operationFailed = false;
     operationCancelled = false;
     console.log('>>>>>>>>>>>>>>>>>');
+    for (const value in data) {
+      console.log(`${value}: ${data[value]}`);
+    }
+    console.log('>>>>>>>>>>>>>>>>>');
+
+    const { 'kind.cluster.creation.provider': prov, ...rest } = data;
+    data = rest;
+    console.log('>>>>>>>>>>>>>>>>>' + prov);
     for (const value in data) {
       console.log(`${value}: ${data[value]}`);
     }

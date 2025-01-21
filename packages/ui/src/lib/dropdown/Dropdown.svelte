@@ -229,9 +229,15 @@ function onWindowClick(e: Event): void {
     </div>
   {/if}
 
-  <input name={name} value={value} type="hidden" aria-label="hidden input"/>
+  <!-- <input name={name} value={value} type="hidden" aria-label="hidden input"/> -->
 
   <select use:buildOptions class="hidden" bind:value={value}>
-    {@render children?.()}
+    {#if !children || children.length === 0}
+      {#each options as option}
+        <option value={option.value}></option>
+      {/each}
+    {:else}
+     {@render children?.()}
+    {/if}
   </select>
 </div>

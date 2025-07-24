@@ -91,6 +91,8 @@ function createToastOptions(taskInfo: TaskInfo): SvelteToastOptions {
   };
 }
 
+console.log('hello world');
+
 function displayNewToast(taskInfo: TaskInfo): number {
   const toastOptions = createToastOptions(taskInfo);
   return toast.push(taskInfo.name, toastOptions);

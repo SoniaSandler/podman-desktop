@@ -33,6 +33,7 @@ export class ProtocolLauncher {
       url = url.replace('podman-desktop://preferences/experimental', 'podman-desktop:experimental');
     }
 
+    console.log('>>>>>>>>>>> sanitizeProtocolForExtension:' + url);
     return url;
   }
 
@@ -43,11 +44,14 @@ export class ProtocolLauncher {
       // now search if we have 'open-url' in the list of args and give it to the handler
       for (const arg of args) {
         const analyzedArg = this.sanitizeProtocolForExtension(arg);
+        console.log('>>>>>>>>>>>> analyzedArg:' + analyzedArg);
         if (
           analyzedArg.startsWith('podman-desktop:extension/') ||
           analyzedArg.startsWith('podman-desktop:experimental')
         ) {
+          console.log('>>>>>>>>>>>> before handle url');
           this.handleOpenUrl(analyzedArg);
+          console.log('>>>>>>>>>>>> after handle url');
         }
       }
     }
@@ -61,21 +65,26 @@ export class ProtocolLauncher {
     url = this.sanitizeProtocolForExtension(url);
 
     if (url.startsWith('podman-desktop:extension/')) {
+      console.log('>>>>>>>>>> inside start with podman-desktop:extension/');
       // grab the extension id
       const extensionId = url.substring('podman-desktop:extension/'.length);
+      console.log('>>>>>>>>>> extension id');
 
       // wait that the window is ready
       this.browserWindow.promise
         .then(w => {
           w.webContents.send('podman-desktop-protocol:install-extension', extensionId);
+          console.log('>>>>>>>>>> after send for podman-desktop:extension/');
         })
         .catch((error: unknown) => {
           console.error('Error sending open-url event to webcontents', error);
         });
     } else if (url.startsWith('podman-desktop:experimental')) {
+      console.log('>>>>>>>>>> inside start with podman-desktop:experimental');
       this.browserWindow.promise
         .then(w => {
           w.webContents.send('podman-desktop-protocol:open-experimental-features');
+          console.log('>>>>>>>>>> after send for podman-desktop:experimental');
         })
         .catch((error: unknown) => {
           console.error('Error sending open-url event to webcontents', error);

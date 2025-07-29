@@ -126,7 +126,7 @@ Kubernetes questions & development:
 - [Follow us on X](https://x.com/podmandesktop)
 - [Follow us on LinkedIn](https://www.linkedin.com/company/podman-desktop)
 
-[![github](https://img.shields.io/badge/github_discussions-222222.svg?style=flat-square)](https://github.com/podman-desktop/podman-desktop/discussions)
+[![github](https://img.shields.io/badge/github_discussions-222222.svg?style=flat-square))](https://github.com/podman-desktop/podman-desktop/discussions)
 [![discord](https://img.shields.io/badge/discord-7289da.svg?style=flat-square)](https://discord.com/invite/x5GzFF6QH4)
 
 ### Adopters

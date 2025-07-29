@@ -126,6 +126,8 @@ Kubernetes questions & development:
 - [Follow us on X](https://x.com/podmandesktop)
 - [Follow us on LinkedIn](https://www.linkedin.com/company/podman-desktop)
 
+[![github](https://img.shields.io/badge/github_discussions-222222.svg?style=flat-square)](https://github.com/podman-desktop/podman-desktop/discussions)
+
 ### Adopters
 
 Check out the [list of companies](./ADOPTERS.md) already using Podman Desktop.

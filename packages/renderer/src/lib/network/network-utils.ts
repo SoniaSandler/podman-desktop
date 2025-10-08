@@ -22,6 +22,7 @@ import type { NetworkInfoUI } from './NetworkInfoUI';
 
 export class NetworkUtils {
   toVolumeInfoUI(networkInspectInfo: NetworkInspectInfo): NetworkInfoUI {
+    console.log(networkInspectInfo);
     return {
       id: networkInspectInfo.Id,
       shortId: networkInspectInfo.Id.substring(0, 12),
@@ -30,7 +31,9 @@ export class NetworkUtils {
       created: networkInspectInfo.Created,
       engineId: networkInspectInfo.engineId,
       engineName: networkInspectInfo.engineName,
+      engineType: networkInspectInfo.engineType,
       selected: false,
+      status: Object.keys(networkInspectInfo.Containers ?? {}).length > 0 ? 'USED' : 'UNUSED',
     };
   }
 }

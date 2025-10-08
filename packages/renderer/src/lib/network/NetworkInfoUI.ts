@@ -24,5 +24,7 @@ export interface NetworkInfoUI {
   created: string;
   engineId: string;
   engineName: string;
+  engineType: string;
   selected: boolean;
+  status: string;
 }

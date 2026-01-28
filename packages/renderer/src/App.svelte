@@ -189,9 +189,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/images/:id/:engineId" breadcrumb="Images" let:meta navigationHint="root">
           <ImagesList searchTerm={meta.params.id} imageEngineId={meta.params.engineId} />
         </Route>
-        <Route path="/networks/create/*" breadcrumb="Create Network">
-          <CreateNetwork />
-        </Route>
         <Route
           path="/manifests/:id/:engineId/:base64RepoTag/*"
           breadcrumb="Manifest Details"
@@ -224,6 +221,19 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/images/load" breadcrumb="Load Images">
           <LoadImages />
         </Route>
+
+        <Route path="/networks/*" breadcrumb="Networks" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Networks" navigationHint="root">
+            <NetworksList />
+          </Route>
+          <Route path="/create/*" breadcrumb="Create Network">
+            <CreateNetwork />
+          </Route>
+          <Route path="/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
+            <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
+          </Route>
+        </Route>
+
         <Route path="/pods" breadcrumb="Pods" navigationHint="root">
           <PodsList />
         </Route>
@@ -259,12 +269,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/volumes/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
           <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
-        </Route>
-        <Route path="/networks" breadcrumb="Networks" navigationHint="root">
-          <NetworksList />
-        </Route>
-        <Route path="/networks/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
-          <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">

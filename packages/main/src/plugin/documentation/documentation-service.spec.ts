@@ -20,6 +20,7 @@ import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DocumentationService } from '/@/plugin/documentation/documentation-service.js';
+import product from '/@product.json' with { type: 'json' };
 
 const originalConsoleError = console.error;
 
@@ -30,10 +31,32 @@ const mockApiSender = {
   send: vi.fn(),
 } as unknown as ApiSenderType;
 
+const fallbackDocumentation = [
+  {
+    id: 'item1',
+    name: 'Item 1',
+    description: 'Some description 1',
+    url: '/url/1',
+    category: 'Documentation',
+  },
+  {
+    id: 'item2',
+    name: 'Item 2',
+    description: 'Some description 2',
+    url: '/url/2',
+    category: 'Tutorial',
+  },
+];
+
+vi.mock(import('/@product.json'));
+
 beforeEach(() => {
   vi.resetAllMocks();
   documentationService = new DocumentationService(mockApiSender);
   console.error = vi.fn();
+  vi.mocked(product).documentation.docs = '/docs/link';
+  vi.mocked(product).documentation.tutorial = '/tutorial/link';
+  vi.mocked(product).fallbackDocumentation = fallbackDocumentation;
 });
 
 afterEach(() => {
@@ -42,42 +65,49 @@ afterEach(() => {
 
 describe('fetchDocumentation', () => {
   test('should fetch documentation and tutorials successfully', async () => {
-    const mockDocsHtml = `
-      <html>
-        <body>
-          <a href="/docs/intro">Introduction</a>
-          <a href="/docs/containers">Containers Guide</a>
-          <a href="/docs/kubernetes">Kubernetes Guide</a>
-        </body>
-      </html>
-    `;
+    const mockDocsJson = [
+      {
+        name: 'Introduction',
+        url: '/docs/intro',
+      },
+      {
+        name: 'Containers Guide',
+        url: '/docs/containers',
+      },
+      {
+        name: 'Kubernetes Guide',
+        url: '/docs/kubernetes',
+      },
+    ];
 
-    const mockTutorialHtml = `
-      <html>
-        <body>
-          <a href="/tutorial/getting-started">Getting Started Tutorial</a>
-          <a href="/tutorial/kubernetes-cluster">Kubernetes Cluster Tutorial</a>
-        </body>
-      </html>
-    `;
+    const mockTutorialJson = [
+      {
+        name: 'Getting Started Tutorial',
+        url: '/tutorial/getting-started',
+      },
+      {
+        name: 'Kubernetes Cluster Tutorial',
+        url: '/tutorial/kubernetes-cluster',
+      },
+    ];
 
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.fetchDocumentation();
 
     // Verify fetch was called with correct URLs
     expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy).toHaveBeenCalledWith('https://podman-desktop.io/docs.json');
-    expect(fetchSpy).toHaveBeenCalledWith('https://podman-desktop.io/tutorials.json');
+    expect(fetchSpy).toHaveBeenCalledWith('/docs/link');
+    expect(fetchSpy).toHaveBeenCalledWith('/tutorial/link');
 
     // Verify service is initialized
     const items = await documentationService.getDocumentationItems();
@@ -92,12 +122,16 @@ describe('fetchDocumentation', () => {
 
     const items = await documentationService.getDocumentationItems();
     expect(items).toBeDefined();
-    expect(items.length).toBeGreaterThan(0);
+    expect(items.length).toBe(2);
 
     // Should include fallback items
-    const introItem = items.find(item => item.id === 'docs-intro');
-    expect(introItem).toBeDefined();
-    expect(introItem?.name).toBe('Introduction & Getting Started');
+    const firstItem = items.find(item => item.id === 'item1');
+    expect(firstItem).toBeDefined();
+    expect(firstItem?.name).toBe('Item 1');
+
+    const secondItem = items.find(item => item.id === 'item2');
+    expect(secondItem).toBeDefined();
+    expect(secondItem?.name).toBe('Item 2');
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
@@ -121,18 +155,28 @@ describe('fetchDocumentation', () => {
 
 describe('getDocumentationItems', () => {
   test('should initialize automatically if not initialized', async () => {
-    const mockDocsHtml = '<a href="/docs/auto">Auto Init</a>';
-    const mockTutorialHtml = '<a href="/tutorial/auto">Auto Tutorial</a>';
+    const mockDocsJson = [
+      {
+        name: 'Auto Init',
+        url: '/docs/auto',
+      },
+    ];
+    const mockTutorialJson = [
+      {
+        name: 'Auto Tutorial',
+        url: '/tutorial/auto',
+      },
+    ];
 
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     const items = await documentationService.getDocumentationItems();
@@ -143,19 +187,29 @@ describe('getDocumentationItems', () => {
   });
 
   test('should return cached items after initialization', async () => {
-    const mockDocsHtml = '<a href="/docs/cached">Cached</a>';
-    const mockTutorialHtml = '<a href="/tutorial/cached">Cached Tutorial</a>';
+    const mockDocsJson = [
+      {
+        name: 'Cached',
+        url: '/docs/cached',
+      },
+    ];
+    const mockTutorialJson = [
+      {
+        name: 'Cached Tutorial',
+        url: '/tutorial/cached',
+      },
+    ];
 
     // Only mock once - should be cached after first call
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     const firstCall = await documentationService.getDocumentationItems();
@@ -168,19 +222,29 @@ describe('getDocumentationItems', () => {
 
 describe('refreshDocumentation', () => {
   test('should re-fetch documentation and send update notification', async () => {
-    const mockDocsHtml = '<a href="/docs/refresh">Refresh Test</a>';
-    const mockTutorialHtml = '<a href="/tutorial/refresh">Refresh Tutorial</a>';
+    const mockDocsJson = [
+      {
+        name: 'Refresh Test',
+        url: '/docs/refresh',
+      },
+    ];
+    const mockTutorialJson = [
+      {
+        name: 'Refresh Tutorial',
+        url: '/tutorial/refresh',
+      },
+    ];
 
     // Initial fetch
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.fetchDocumentation();
@@ -190,11 +254,11 @@ describe('refreshDocumentation', () => {
     fetchSpy
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.refreshDocumentation();
@@ -206,43 +270,61 @@ describe('refreshDocumentation', () => {
 
 describe('parseDocumentationContent', () => {
   test('should parse documentation and tutorial links correctly', async () => {
-    const mockDocsHtml = `
-      <html>
-        <body>
-          <nav>
-            <a href="/docs/intro">Introduction & Getting Started</a>
-            <a href="/docs/containers">Working with Containers</a>
-            <a href="/docs/kubernetes">Kubernetes Integration</a>
-            <a href="/docs/troubleshooting">Troubleshooting Guide</a>
-            <a href="#edit">Edit this page</a> <!-- Should be filtered out -->
-            <a href="#next">Next</a> <!-- Should be filtered out -->
-          </nav>
-        </body>
-      </html>
-    `;
+    const mockDocsJson = [
+      {
+        name: 'Introduction & Getting Started',
+        url: '/docs/intro',
+      },
+      {
+        name: 'Working with Containers',
+        url: '/docs/containers',
+      },
+      {
+        name: 'Kubernetes Integration',
+        url: '/docs/kubernetes',
+      },
+      {
+        name: 'Troubleshooting Guide',
+        url: '/docs/troubleshooting',
+      },
+      {
+        name: 'Edit this page',
+        url: '#edit',
+      },
+      {
+        name: 'Next',
+        url: '#next',
+      },
+    ];
 
-    const mockTutorialHtml = `
-      <html>
-        <body>
-          <nav>
-            <a href="/tutorial/getting-started">Getting Started</a>
-            <a href="/tutorial/kubernetes-cluster">Creating a Kubernetes Cluster</a>
-            <a href="/tutorial/compose">Using Docker Compose</a>
-            <a href="#edit">Edit this page</a> <!-- Should be filtered out -->
-          </nav>
-        </body>
-      </html>
-    `;
+    const mockTutorialJson = [
+      {
+        name: 'Getting Started',
+        url: '/tutorial/getting-started',
+      },
+      {
+        name: 'Creating a Kubernetes Cluster',
+        url: '/tutorial/kubernetes-cluster',
+      },
+      {
+        name: 'Using Docker Compose',
+        url: '/tutorial/compose',
+      },
+      {
+        name: 'Edit this page',
+        url: '#edit',
+      },
+    ];
 
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.fetchDocumentation();
@@ -258,44 +340,48 @@ describe('parseDocumentationContent', () => {
     expect(tutorialItems.length).toBeGreaterThanOrEqual(1); // Core + parsed
 
     // Check specific parsed items
-    const introItem = items.find(item => item.name === 'Introduction & Getting Started' && item.id === 'docs-intro');
+    const introItem = items.find(item => item.name === 'Introduction & Getting Started');
     expect(introItem).toBeDefined();
     expect(introItem?.category).toBe('Documentation');
-    expect(introItem?.url).toBe('https://podman-desktop.io/docs/intro');
+    expect(introItem?.url).toBe('/docs/intro');
 
-    // Tutorial item may not be parsed if HTML doesn't match regex, so just check core tutorial exists
-    const coreTutorialItem = items.find(item => item.id === 'tutorial-index');
+    const coreTutorialItem = items.find(item => item.name === 'Getting Started');
     expect(coreTutorialItem).toBeDefined();
     expect(coreTutorialItem?.category).toBe('Tutorial');
-
-    // Check that filtered items are not included
-    const editItem = items.find(item => item.name.includes('Edit this page'));
-    expect(editItem).toBeUndefined();
-
-    const nextItem = items.find(item => item.name.includes('Next'));
-    expect(nextItem).toBeUndefined();
   });
 
   test('should handle relative and absolute URLs correctly', async () => {
-    const mockDocsHtml = `
-      <a href="/docs/relative">Relative Link</a>
-      <a href="https://podman-desktop.io/docs/absolute">Absolute Link</a>
-    `;
+    const mockDocsJson = [
+      {
+        name: 'Relative Link',
+        url: '/docs/relative',
+      },
+      {
+        name: 'Absolute Link',
+        url: 'https://podman-desktop.io/docs/absolute',
+      },
+    ];
 
-    const mockTutorialHtml = `
-      <a href="/tutorial/relative">Relative Tutorial</a>
-      <a href="https://podman-desktop.io/tutorial/absolute">Absolute Tutorial</a>
-    `;
+    const mockTutorialJson = [
+      {
+        name: 'Relative Tutorial',
+        url: '/tutorial/relative',
+      },
+      {
+        name: 'Absolute Tutorial',
+        url: 'https://podman-desktop.io/tutorial/absolute',
+      },
+    ];
 
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.fetchDocumentation();
@@ -303,15 +389,13 @@ describe('parseDocumentationContent', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
 
-    // Since the simple HTML may not match complex regex patterns,
-    // we should mainly verify core documentation pages exist
-    const coreDocItem = items.find(item => item.id === 'docs-intro');
-    expect(coreDocItem).toBeDefined();
-    expect(coreDocItem?.url).toBe('https://podman-desktop.io/docs/intro');
+    const docItem = items.find(item => item.name === 'Relative Link');
+    expect(docItem).toBeDefined();
+    expect(docItem?.url).toBe('/docs/relative');
 
-    const coreTutorialItem = items.find(item => item.id === 'tutorial-index');
-    expect(coreTutorialItem).toBeDefined();
-    expect(coreTutorialItem?.url).toBe('https://podman-desktop.io/tutorial');
+    const tutorialItem = items.find(item => item.name === 'Absolute Tutorial');
+    expect(tutorialItem).toBeDefined();
+    expect(tutorialItem?.url).toBe('https://podman-desktop.io/tutorial/absolute');
   });
 
   test('should handle empty or malformed HTML gracefully', async () => {
@@ -319,11 +403,11 @@ describe('parseDocumentationContent', () => {
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(''),
+        json: () => Promise.resolve([]),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve('<html><body></body></html>'),
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
@@ -331,30 +415,42 @@ describe('parseDocumentationContent', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
 
-    // Should still have core documentation pages
-    expect(items.length).toBeGreaterThan(0);
-    const coreItem = items.find(item => item.id === 'docs-intro');
-    expect(coreItem).toBeDefined();
+    // Should fallback to predefined documentation when JSON lists are empty
+    expect(items).toStrictEqual(fallbackDocumentation);
   });
 
   test('should remove duplicate items', async () => {
-    const mockDocsHtml = `
-      <a href="/docs/duplicate">Duplicate Item</a>
-      <a href="/docs/duplicate">Duplicate Item</a>
-      <a href="/docs/unique">Unique Item</a>
-    `;
+    const mockDocsJson = [
+      {
+        name: 'Duplicate Item',
+        url: '/docs/duplicate',
+      },
+      {
+        name: 'Duplicate Item',
+        url: '/docs/duplicate',
+      },
+      {
+        name: 'Unique Item',
+        url: '/docs/unique',
+      },
+    ];
 
-    const mockTutorialHtml = '<a href="/tutorial/test">Test Tutorial</a>';
+    const mockTutorialJson = [
+      {
+        name: 'Test Tutorial',
+        url: '/tutorial/test',
+      },
+    ];
 
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.fetchDocumentation();
@@ -362,30 +458,39 @@ describe('parseDocumentationContent', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
 
-    // Since simple HTML may not be parsed, just check core documentation exists
-    const coreDocItems = items.filter(item => item.category === 'Documentation');
-    expect(coreDocItems.length).toBeGreaterThanOrEqual(1);
+    const docItems = items.filter(item => item.category === 'Documentation');
 
-    // Just verify we have the expected core documentation
-    const coreTutorialItems = items.filter(item => item.category === 'Tutorial');
-    expect(coreTutorialItems.length).toBeGreaterThanOrEqual(1);
+    expect(docItems.length).toBe(2);
+
+    const tutorialItems = items.filter(item => item.category === 'Tutorial');
+    expect(tutorialItems.length).toBe(1);
   });
 });
 
 describe('generateId', () => {
   test('should generate consistent IDs for documentation items', async () => {
-    const mockDocsHtml = '<a href="/docs/test">Test Documentation Item</a>';
-    const mockTutorialHtml = '<a href="/tutorial/test">Test Tutorial Item</a>';
+    const mockDocsJson = [
+      {
+        name: 'Test Documentation Item',
+        url: '/docs/test',
+      },
+    ];
+    const mockTutorialJson = [
+      {
+        name: 'Test Tutorial Item',
+        url: '/tutorial/test',
+      },
+    ];
 
     const fetchSpy = vi
       .spyOn(global, 'fetch')
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockDocsHtml),
+        json: () => Promise.resolve(mockDocsJson),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(mockTutorialHtml),
+        json: () => Promise.resolve(mockTutorialJson),
       } as Response);
 
     await documentationService.fetchDocumentation();
@@ -393,13 +498,14 @@ describe('generateId', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2); // Only called during fetchDocumentation, cached for getDocumentationItems
 
-    // Check that we have core documentation IDs
-    const coreDocItem = items.find(item => item.id === 'docs-intro');
-    expect(coreDocItem).toBeDefined();
-    expect(coreDocItem?.id).toBe('docs-intro');
+    // IDs are generated from item names (sha256)
+    const docItem = items.find(item => item.name === 'Test Documentation Item');
+    expect(docItem).toBeDefined();
+    expect(docItem?.id).toMatch(/^[a-f0-9]{64}$/);
 
-    const coreTutorialItem = items.find(item => item.id === 'tutorial-index');
-    expect(coreTutorialItem).toBeDefined();
-    expect(coreTutorialItem?.id).toBe('tutorial-index');
+    const tutorialItem = items.find(item => item.name === 'Test Tutorial Item');
+    expect(tutorialItem).toBeDefined();
+    expect(tutorialItem?.id).toMatch(/^[a-f0-9]{64}$/);
+    expect(docItem?.id).not.toBe(tutorialItem?.id);
   });
 });

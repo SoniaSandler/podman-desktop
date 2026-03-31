@@ -22,8 +22,8 @@ import { DocumentationBaseInfo, DocumentationInfo } from '@podman-desktop/core-a
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
-import fallbackDocumentation from '/@/assets/fallback-documentation.json' with { type: 'json' };
 import { Disposable } from '/@/plugin/types/disposable.js';
+import product from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class DocumentationService extends Disposable {
@@ -41,10 +41,12 @@ export class DocumentationService extends Disposable {
   }
 
   async fetchDocumentation(): Promise<void> {
+    const docsLink = product.documentation.docs;
+    const tutorialLink = product.documentation.tutorial;
     try {
       const [docsJson, tutorialsJson] = await Promise.all([
-        this.fetchJsonContent('https://podman-desktop.io/docs.json'),
-        this.fetchJsonContent('https://podman-desktop.io/tutorials.json'),
+        this.fetchJsonContent(docsLink),
+        this.fetchJsonContent(tutorialLink),
       ]);
 
       if (docsJson && tutorialsJson) {
@@ -56,7 +58,7 @@ export class DocumentationService extends Disposable {
     } catch (error: unknown) {
       console.error('Failed to fetch documentation at startup:', error);
       // Fallback to predefined documentation if fetching fails
-      this.documentation = fallbackDocumentation as DocumentationInfo[];
+      this.documentation = product.fallbackDocumentation as DocumentationInfo[];
       this.isInitialized = true;
     }
   }
@@ -107,7 +109,7 @@ export class DocumentationService extends Disposable {
     // Validate input parameters
     if (!docsJson || !tutorialsJson) {
       console.warn('Missing JSON content for parsing documentation');
-      return fallbackDocumentation as DocumentationInfo[];
+      return product.fallbackDocumentation as DocumentationInfo[];
     }
 
     // Parse both docs and tutorials using generic logic
@@ -128,13 +130,16 @@ export class DocumentationService extends Disposable {
       try {
         for (const item of config.data) {
           if (item.name && item.url) {
-            documentation.push({
-              id: createHash('sha256').update(item.name).digest('hex'),
-              name: item.name,
-              description: `${config.category}: ${item.name}`,
-              url: item.url,
-              category: config.category,
-            });
+            const id = createHash('sha256').update(item.name).digest('hex');
+            if (!documentation.find(doc => doc.id === id)) {
+              documentation.push({
+                id: id,
+                name: item.name,
+                description: `${config.category}: ${item.name}`,
+                url: item.url,
+                category: config.category,
+              });
+            }
           }
         }
       } catch (error: unknown) {
@@ -145,7 +150,7 @@ export class DocumentationService extends Disposable {
     // If no documentation was parsed, use fallback
     if (documentation.length === 0) {
       console.error('DocumentationService: No items parsed, using fallback documentation');
-      return fallbackDocumentation as DocumentationInfo[];
+      return product.fallbackDocumentation as DocumentationInfo[];
     }
 
     return documentation;

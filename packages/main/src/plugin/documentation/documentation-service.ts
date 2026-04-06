@@ -41,24 +41,19 @@ export class DocumentationService extends Disposable {
   }
 
   async fetchDocumentation(): Promise<void> {
-    const docsLink = product.documentation.docs;
-    const tutorialLink = product.documentation.tutorial;
     try {
-      const [docsJson, tutorialsJson] = await Promise.all([
-        this.fetchJsonContent(docsLink),
-        this.fetchJsonContent(tutorialLink),
-      ]);
-
-      if (docsJson && tutorialsJson) {
-        this.documentation = this.parseDocumentationFromJson(docsJson, tutorialsJson);
-      } else {
-        throw new Error('Failed to fetch documentation JSON files');
-      }
+      const documentationJsons = await Promise.all(
+        [...product.documentation.links].map(async item => {
+          const data = await this.fetchJsonContent(item.link);
+          return { category: item.category, data };
+        }),
+      );
+      this.documentation = this.parseDocumentationFromJson(documentationJsons);
       this.isInitialized = true;
     } catch (error: unknown) {
       console.error('Failed to fetch documentation at startup:', error);
       // Fallback to predefined documentation if fetching fails
-      this.documentation = product.fallbackDocumentation as DocumentationInfo[];
+      this.documentation = product.documentation.fallback as DocumentationInfo[];
       this.isInitialized = true;
     }
   }
@@ -101,56 +96,37 @@ export class DocumentationService extends Disposable {
   }
 
   private parseDocumentationFromJson(
-    docsJson: DocumentationBaseInfo[],
-    tutorialsJson: DocumentationBaseInfo[],
+    documentationJsons: { category?: string; data: DocumentationBaseInfo[] }[],
   ): DocumentationInfo[] {
     const documentation: DocumentationInfo[] = [];
 
-    // Validate input parameters
-    if (!docsJson || !tutorialsJson) {
+    // Check that there is some data
+    if (!documentationJsons.some(item => item.data.length > 0)) {
       console.warn('Missing JSON content for parsing documentation');
-      return product.fallbackDocumentation as DocumentationInfo[];
+      return product.documentation.fallback as DocumentationInfo[];
     }
 
-    // Parse both docs and tutorials using generic logic
-    const parseConfigs = [
-      {
-        data: docsJson,
-        category: 'Documentation',
-        errorMessage: 'Error parsing documentation JSON:',
-      },
-      {
-        data: tutorialsJson,
-        category: 'Tutorial',
-        errorMessage: 'Error parsing tutorials JSON:',
-      },
-    ];
-
-    for (const config of parseConfigs) {
-      try {
-        for (const item of config.data) {
-          if (item.name && item.url) {
-            const id = createHash('sha256').update(item.name).digest('hex');
-            if (!documentation.find(doc => doc.id === id)) {
-              documentation.push({
-                id: id,
-                name: item.name,
-                description: `${config.category}: ${item.name}`,
-                url: item.url,
-                category: config.category,
-              });
-            }
+    for (const documentationJson of documentationJsons) {
+      for (const item of documentationJson.data) {
+        if (item.name && item.url) {
+          const id = createHash('sha256').update(item.name).digest('hex');
+          if (!documentation.find(doc => doc.id === id)) {
+            documentation.push({
+              id: id,
+              name: item.name,
+              description: `${documentationJson.category}: ${item.name}`,
+              url: item.url,
+              category: documentationJson.category ?? '',
+            });
           }
         }
-      } catch (error: unknown) {
-        console.error(config.errorMessage, error);
       }
     }
 
     // If no documentation was parsed, use fallback
     if (documentation.length === 0) {
       console.error('DocumentationService: No items parsed, using fallback documentation');
-      return product.fallbackDocumentation as DocumentationInfo[];
+      return product.documentation.fallback as DocumentationInfo[];
     }
 
     return documentation;

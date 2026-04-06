@@ -54,9 +54,12 @@ beforeEach(() => {
   vi.resetAllMocks();
   documentationService = new DocumentationService(mockApiSender);
   console.error = vi.fn();
-  vi.mocked(product).documentation.docs = '/docs/link';
-  vi.mocked(product).documentation.tutorial = '/tutorial/link';
-  vi.mocked(product).fallbackDocumentation = fallbackDocumentation;
+  vi.mocked(product).documentation.links = [
+    { link: '/docs/link', category: 'category 1' },
+    { link: '/tutorial/link', category: 'category 2' },
+    { link: '/some/link', category: 'category 3' },
+  ];
+  vi.mocked(product).documentation.fallback = fallbackDocumentation;
 });
 
 afterEach(() => {
@@ -100,14 +103,19 @@ describe('fetchDocumentation', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
 
     // Verify fetch was called with correct URLs
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
     expect(fetchSpy).toHaveBeenCalledWith('/docs/link');
     expect(fetchSpy).toHaveBeenCalledWith('/tutorial/link');
+    expect(fetchSpy).toHaveBeenCalledWith('/some/link');
 
     // Verify service is initialized
     const items = await documentationService.getDocumentationItems();
@@ -133,7 +141,7 @@ describe('fetchDocumentation', () => {
     expect(secondItem).toBeDefined();
     expect(secondItem?.name).toBe('Item 2');
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   test('should use fallback when HTTP response is not ok', async () => {
@@ -149,7 +157,7 @@ describe('fetchDocumentation', () => {
     expect(items).toBeDefined();
     expect(items.length).toBeGreaterThan(0);
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 });
 
@@ -177,11 +185,15 @@ describe('getDocumentationItems', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     const items = await documentationService.getDocumentationItems();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
     expect(items).toBeDefined();
     expect(items.length).toBeGreaterThan(0);
   });
@@ -210,13 +222,17 @@ describe('getDocumentationItems', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     const firstCall = await documentationService.getDocumentationItems();
     const secondCall = await documentationService.getDocumentationItems();
 
     expect(firstCall).toStrictEqual(secondCall); // Same content
-    expect(fetchSpy).toHaveBeenCalledTimes(2); // Only called once for initialization
+    expect(fetchSpy).toHaveBeenCalledTimes(3); // Only called once for initialization
   });
 });
 
@@ -245,10 +261,14 @@ describe('refreshDocumentation', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
 
     // Refresh fetch - add more mock calls
     fetchSpy
@@ -259,11 +279,15 @@ describe('refreshDocumentation', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.refreshDocumentation();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(4); // 2 initial + 2 refresh
+    expect(fetchSpy).toHaveBeenCalledTimes(6); // 3 initial + 3 refresh
     expect(mockApiSender.send).toHaveBeenCalledWith('documentation-updated');
   });
 });
@@ -287,14 +311,6 @@ describe('parseDocumentationContent', () => {
         name: 'Troubleshooting Guide',
         url: '/docs/troubleshooting',
       },
-      {
-        name: 'Edit this page',
-        url: '#edit',
-      },
-      {
-        name: 'Next',
-        url: '#next',
-      },
     ];
 
     const mockTutorialJson = [
@@ -310,10 +326,6 @@ describe('parseDocumentationContent', () => {
         name: 'Using Docker Compose',
         url: '/tutorial/compose',
       },
-      {
-        name: 'Edit this page',
-        url: '#edit',
-      },
     ];
 
     const fetchSpy = vi
@@ -325,29 +337,35 @@ describe('parseDocumentationContent', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
     const items = await documentationService.getDocumentationItems();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
 
-    // Check that we have core pages plus parsed pages
-    const docItems = items.filter(item => item.category === 'Documentation');
-    const tutorialItems = items.filter(item => item.category === 'Tutorial');
+    console.log(items);
 
-    expect(docItems.length).toBeGreaterThanOrEqual(4); // Core + parsed
-    expect(tutorialItems.length).toBeGreaterThanOrEqual(1); // Core + parsed
+    // Check that we have expected parsed items and categories
+    const cat1Items = items.filter(item => item.category === 'category 1');
+    const cat2Items = items.filter(item => item.category === 'category 2');
+
+    expect(cat1Items.length).toBe(4); // parsed
+    expect(cat2Items.length).toBe(3); // parsed
 
     // Check specific parsed items
     const introItem = items.find(item => item.name === 'Introduction & Getting Started');
     expect(introItem).toBeDefined();
-    expect(introItem?.category).toBe('Documentation');
+    expect(introItem?.category).toBe('category 1');
     expect(introItem?.url).toBe('/docs/intro');
 
     const coreTutorialItem = items.find(item => item.name === 'Getting Started');
     expect(coreTutorialItem).toBeDefined();
-    expect(coreTutorialItem?.category).toBe('Tutorial');
+    expect(coreTutorialItem?.category).toBe('category 2');
   });
 
   test('should handle relative and absolute URLs correctly', async () => {
@@ -382,12 +400,16 @@ describe('parseDocumentationContent', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
     const items = await documentationService.getDocumentationItems();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
 
     const docItem = items.find(item => item.name === 'Relative Link');
     expect(docItem).toBeDefined();
@@ -398,9 +420,13 @@ describe('parseDocumentationContent', () => {
     expect(tutorialItem?.url).toBe('https://podman-desktop.io/tutorial/absolute');
   });
 
-  test('should handle empty or malformed HTML gracefully', async () => {
+  test('should handle empty JSON gracefully', async () => {
     const fetchSpy = vi
       .spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      } as Response)
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([]),
@@ -413,7 +439,7 @@ describe('parseDocumentationContent', () => {
     await documentationService.fetchDocumentation();
     const items = await documentationService.getDocumentationItems();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
 
     // Should fallback to predefined documentation when JSON lists are empty
     expect(items).toStrictEqual(fallbackDocumentation);
@@ -451,18 +477,22 @@ describe('parseDocumentationContent', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
     const items = await documentationService.getDocumentationItems();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
 
-    const docItems = items.filter(item => item.category === 'Documentation');
+    const docItems = items.filter(item => item.category === 'category 1');
 
     expect(docItems.length).toBe(2);
 
-    const tutorialItems = items.filter(item => item.category === 'Tutorial');
+    const tutorialItems = items.filter(item => item.category === 'category 2');
     expect(tutorialItems.length).toBe(1);
   });
 });
@@ -491,12 +521,16 @@ describe('generateId', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTutorialJson),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
       } as Response);
 
     await documentationService.fetchDocumentation();
     const items = await documentationService.getDocumentationItems();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2); // Only called during fetchDocumentation, cached for getDocumentationItems
+    expect(fetchSpy).toHaveBeenCalledTimes(3); // Only called during fetchDocumentation, cached for getDocumentationItems
 
     // IDs are generated from item names (sha256)
     const docItem = items.find(item => item.name === 'Test Documentation Item');

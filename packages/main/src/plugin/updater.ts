@@ -427,9 +427,10 @@ export class Updater {
     // local build not pushed to GitHub so prevent any 'update'
     if (error?.message?.includes('No published versions on GitHub')) {
       console.log('Cannot check for updates, no published versions on GitHub');
-      this.defaultVersionEntry();
-      return;
+    } else {
+      console.error('unable to check for updates', error);
     }
+    this.defaultVersionEntry();
     console.error('unable to check for updates', error);
     this.apiSender.send('app-update-available', false);
   }

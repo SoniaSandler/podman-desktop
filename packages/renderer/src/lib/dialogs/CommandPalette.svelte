@@ -92,7 +92,7 @@ let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
 let goToItems: GoToInfo[] = $derived(
   createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
 );
-let helperText = $derived(searchOptionsWithShortcuts[searchOptionsSelectedIndex].placeholder);
+let helperText = $derived(searchOptionsWithShortcuts[searchOptionsSelectedIndex]?.placeholder);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(

@@ -1758,8 +1758,8 @@ export class PluginSystem {
       return podmanDesktopUpdater.getReleaseNotes();
     });
 
-    this.ipcHandle('app:getProductName', async (_listener): Promise<string> => {
-      return product.name;
+    this.ipcHandle('app:getTitleBarText', async (_listener): Promise<string> => {
+      return product.titleBar;
     });
 
     this.ipcHandle('provider-registry:getProviderInfos', async (): Promise<ProviderInfo[]> => {

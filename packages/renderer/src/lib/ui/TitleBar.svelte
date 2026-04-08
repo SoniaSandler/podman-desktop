@@ -10,7 +10,7 @@ import SearchButton from './SearchButton.svelte';
 
 let platform: string = $state('');
 
-const title = await window.getProductName();
+const title = await window.getTitleBarText();
 let commandPaletteVisible = $state(false);
 
 onMount(async () => {

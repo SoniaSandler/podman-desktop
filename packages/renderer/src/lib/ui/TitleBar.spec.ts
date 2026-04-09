@@ -123,7 +123,7 @@ describe('Windows', () => {
   test('Expect title and search', async () => {
     await waitRender({});
 
-    const title = await vi.waitFor(() => screen.queryByText('Podman Desktop'));
+    const title = await vi.waitUntil(() => screen.queryByText('Podman Desktop'));
     expect(title).toBeInTheDocument();
 
     const searchButton = screen.queryByText('Search');

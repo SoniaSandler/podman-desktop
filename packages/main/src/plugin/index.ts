@@ -1759,7 +1759,7 @@ export class PluginSystem {
     });
 
     this.ipcHandle('app:getTitleBarText', async (_listener): Promise<string> => {
-      return product.titleBar;
+      return product.name;
     });
 
     this.ipcHandle('provider-registry:getProviderInfos', async (): Promise<ProviderInfo[]> => {

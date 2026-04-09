@@ -4,7 +4,6 @@
   "appId": "io.podman_desktop.PodmanDesktop",
   "artifactName": "podman-desktop",
   "urlProtocol": "podman-desktop",
-  "titleBar": "Podman Desktop",
   "paths": {
     "config": "containers/podman-desktop",
     "managed": {

@@ -30,7 +30,7 @@ export interface FeedbackProperties {
 }
 
 export interface GitHubIssue {
-  category: FeedbackCategory;
+  category: GitHubFeedbackCategory;
   title: string;
   description: string;
   includeSystemInfo?: boolean;

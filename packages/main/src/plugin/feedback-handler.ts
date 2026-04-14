@@ -55,6 +55,8 @@ export class FeedbackHandler {
       ).toString();
       const link = `${productJSONFile.GitHubFeedbackLinks?.issues}/new?${urlSearchParams}`;
       await shell.openExternal(link);
+    } else {
+      console.log('No GitHub issues link found, cannot preview new GitHub issue');
     }
   }
 

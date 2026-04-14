@@ -74,7 +74,7 @@ test.describe
       await commandPalette.goToTab.click();
       await playExpect(commandPalette.commandPaletteInputField).toHaveAttribute(
         'placeholder',
-        'Search images, containers, pods, and other resources',
+        'Search other resources',
       );
 
       await commandPalette.allTab.click();
@@ -169,7 +169,7 @@ test.describe
       await commandPalette.goToTab.click();
       await playExpect(commandPalette.commandPaletteInputField).toHaveAttribute(
         'placeholder',
-        'Search images, containers, pods, and other resources',
+        'Search other resources',
       );
 
       await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });

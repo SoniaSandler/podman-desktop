@@ -64,8 +64,6 @@ const STOPPED_EXTENSION: ExtensionInfo = {
 beforeEach(() => {
   vi.resetAllMocks();
 
-  vi.mocked(productJSONFile).GitHubFeedbackLinks.issues = '/GitHub/issues/link';
-
   // default to linux for testing
   vi.mocked(isLinux).mockReturnValue(true);
   vi.mocked(isMac).mockReturnValue(false);
@@ -128,7 +126,9 @@ describe('openGitHubIssue', () => {
     await feedbackHandler.openGitHubIssue(issueProperties);
 
     expect(shell.openExternal).toHaveBeenCalledOnce();
-    expect(shell.openExternal).toHaveBeenCalledWith('/GitHub/issues/link');
+    expect(shell.openExternal).toHaveBeenCalledWith(
+      expect.stringContaining(productJSONFile.GitHubFeedbackLinks.issues),
+    );
 
     // extract the first argument of the shell.openExternal call
     const url: string | undefined = vi.mocked(shell.openExternal).mock.calls[0]?.[0];
@@ -144,6 +144,10 @@ describe('openGitHubIssue', () => {
     const consoleLogMock = vi.fn();
     console.log = consoleLogMock;
 
+    const originalLink = vi.mocked(productJSONFile).GitHubFeedbackLinks.issues;
+
+    vi.mocked(productJSONFile).GitHubFeedbackLinks.issues = '';
+
     const issueProperties: GitHubIssue = {
       category: 'feature',
       title: 'new feature',
@@ -156,6 +160,7 @@ describe('openGitHubIssue', () => {
     expect(consoleLogMock).toHaveBeenCalledWith('No GitHub issues link found, cannot preview new GitHub issue');
 
     console.log = originalConsoleLog;
+    vi.mocked(productJSONFile).GitHubFeedbackLinks.issues = originalLink;
   });
 
   test('Expect openExternal to be called with queryParams and feature request template', async () => {

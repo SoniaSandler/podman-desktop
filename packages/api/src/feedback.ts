@@ -18,8 +18,9 @@
 
 export type DirectFeedbackCategory = 'developers' | 'design';
 export type GitHubFeedbackCategory = 'feature' | 'bug';
+export type OtherFeedbackCategory = 'other';
 
-export type FeedbackCategory = DirectFeedbackCategory | GitHubFeedbackCategory;
+export type FeedbackCategory = DirectFeedbackCategory | GitHubFeedbackCategory | OtherFeedbackCategory;
 
 export interface FeedbackProperties {
   category: FeedbackCategory;

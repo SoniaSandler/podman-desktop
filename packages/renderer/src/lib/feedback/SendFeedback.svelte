@@ -1,6 +1,10 @@
 <script lang="ts">
 import type { FeedbackCategory } from '@podman-desktop/core-api';
-import { CloseButton, Dropdown, Modal } from '@podman-desktop/ui-svelte';
+import { CloseButton, Dropdown, Link, Modal } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
+
+import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 
 import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
@@ -9,12 +13,12 @@ let displayModal = $state(false);
 const DEFAULT_CATEGORY: FeedbackCategory = 'developers';
 let category: FeedbackCategory = $state(DEFAULT_CATEGORY);
 let hasContent: boolean = false;
+let categoryGitHubLinks: { [category: string]: string } | undefined = $state({});
+let feedbackLinks: { [category: string]: string } = $state({});
 
-const FEEDBACK_CATEGORIES = new Map<FeedbackCategory, string>([
+const FEEDBACK_CATEGORIES = new SvelteMap<FeedbackCategory, string>([
   ['developers', '💬 Direct your words to the developers'],
   ['design', '🎨 User experience or design thoughts'],
-  ['feature', '🚀 Feature request'],
-  ['bug', '🪲 Bug'],
 ]);
 
 window.events?.receive('display-feedback', () => {
@@ -52,6 +56,23 @@ async function hideModal(confirm = true): Promise<void> {
 function handleUpdate(e: boolean): void {
   hasContent = e;
 }
+
+onMount(async () => {
+  categoryGitHubLinks = await window.getGitHubFeedbackLinks();
+  if (categoryGitHubLinks) {
+    if (categoryGitHubLinks.feature) {
+      FEEDBACK_CATEGORIES.set('feature', '🚀 Feature request');
+    }
+    if (categoryGitHubLinks.bug) {
+      FEEDBACK_CATEGORIES.set('bug', '🪲 Bug');
+    }
+  } else {
+    feedbackLinks = (await window.getFeedbackLinks()) ?? {};
+    if (Object.keys(feedbackLinks).length > 0) {
+      FEEDBACK_CATEGORIES.set('other', '❓ Other');
+    }
+  }
+});
 </script>
 
 {#if displayModal}
@@ -72,7 +93,16 @@ function handleUpdate(e: boolean): void {
     {#if category === 'developers' || category === 'design'}
       <DirectFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate}/>
     {:else if category === 'bug' || category === 'feature'}
-      <GitHubIssueFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate}/>
+      <GitHubIssueFeedback onCloseForm={hideModal} category={category} categoryLinks={categoryGitHubLinks} contentChange={handleUpdate}/>
+    {:else if category === 'other'}
+      <FeedbackForm>
+        <svelte:fragment slot="content">
+          <p class="block mt-4 mb-4 text-sm font-medium text-[var(--pd-modal-text)]">Could not find the right category? Take a look at these additional options:</p>
+          {#each Object.entries(feedbackLinks) as [category, link] (category)}
+            <p class="block mt-1 text-sm font-medium text-[var(--pd-modal-text)]">{category}: <Link aria-label={`${category} link`} onclick={(): Promise<void> => window.openExternal(link)}>{link}</Link></p>
+          {/each}
+        </svelte:fragment>
+      </FeedbackForm>
     {/if}
   </Modal>
 </div>

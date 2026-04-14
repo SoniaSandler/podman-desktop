@@ -59,7 +59,7 @@ function handleUpdate(e: boolean): void {
 
 onMount(async () => {
   categoryGitHubLinks = await window.getGitHubFeedbackLinks();
-  if (categoryGitHubLinks) {
+  if (categoryGitHubLinks && (categoryGitHubLinks.feature || categoryGitHubLinks.bug)) {
     if (categoryGitHubLinks.feature) {
       FEEDBACK_CATEGORIES.set('feature', '🚀 Feature request');
     }

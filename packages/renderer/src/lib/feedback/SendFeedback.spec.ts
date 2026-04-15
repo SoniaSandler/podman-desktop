@@ -209,7 +209,7 @@ test('Expect if there no GitHub links to have a new category other with other fe
 
   expect(screen.getByText('category1')).toBeInTheDocument();
   expect(screen.getByText('category2')).toBeInTheDocument();
-  expect(screen.getByText('category3:')).toBeInTheDocument();
+  expect(screen.getByText('category3')).toBeInTheDocument();
 });
 
 test('Expect if there no GitHub links to not have a new category other if there are also no other feedback links', async () => {

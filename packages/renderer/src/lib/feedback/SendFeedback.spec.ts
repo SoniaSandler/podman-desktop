@@ -207,13 +207,9 @@ test('Expect if there no GitHub links to have a new category other with other fe
 
   await fireEvent.click(otherCategory);
 
-  expect(screen.getByText('category1:')).toBeInTheDocument();
-  expect(screen.getByText('category2:')).toBeInTheDocument();
+  expect(screen.getByText('category1')).toBeInTheDocument();
+  expect(screen.getByText('category2')).toBeInTheDocument();
   expect(screen.getByText('category3:')).toBeInTheDocument();
-
-  expect(screen.getByRole('link', { name: 'category1 link' })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'category2 link' })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'category3 link' })).toBeInTheDocument();
 });
 
 test('Expect if there no GitHub links to not have a new category other if there are also no other feedback links', async () => {

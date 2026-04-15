@@ -79,7 +79,7 @@ async function previewOnGitHub(): Promise<void> {
 
 <FeedbackForm>
   <svelte:fragment slot="content">
-    <div class="text-sm text-[var(--pd-state-warning)]">You can search existing {category} issues on <Link aria-label="GitHub issues" onclick={openGitHubIssues}>github.com/podman-desktop/podman-desktop/issues</Link></div>
+    <div class="text-sm text-[var(--pd-state-warning)]">You can search existing {category} issues on <Link aria-label="GitHub issues" onclick={openGitHubIssues}>GitHub</Link></div>
     <!-- issue title -->
     <label for="issueTitle" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Title</label>
     <input

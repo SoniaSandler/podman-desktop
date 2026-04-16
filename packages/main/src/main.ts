@@ -55,6 +55,7 @@ export class Main implements IDisposable {
 
   constructor(app: ElectronApp) {
     this.app = app;
+    this.app.name = product.name;
     this.mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
     this.#plugins = [new DefaultProtocolClient(this.app), new WindowPlugin(this.app, this.mainWindowDeferred.resolve)];

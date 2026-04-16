@@ -154,7 +154,7 @@
       {
         "category": "GOTO",
         "text": "Go to",
-        "placeholder": "Search other resources"
+        "placeholder": "Search images, containers, pods, and other resources"
       }
     ]
   }

@@ -16,7 +16,7 @@ let hasContent: boolean = false;
 let categoryGitHubLinks: { [category: string]: string } | undefined = $state({});
 let feedbackLinks: { [category: string]: string } = $state({});
 
-const FEEDBACK_CATEGORIES = new SvelteMap<FeedbackCategory, string>([
+const feedbackCategories = new SvelteMap<FeedbackCategory, string>([
   ['developers', '💬 Direct your words to the developers'],
   ['design', '🎨 User experience or design thoughts'],
 ]);
@@ -61,15 +61,15 @@ onMount(async () => {
   categoryGitHubLinks = await window.getGitHubFeedbackLinks();
   if (categoryGitHubLinks && (categoryGitHubLinks.feature || categoryGitHubLinks.bug)) {
     if (categoryGitHubLinks.feature) {
-      FEEDBACK_CATEGORIES.set('feature', '🚀 Feature request');
+      feedbackCategories.set('feature', '🚀 Feature request');
     }
     if (categoryGitHubLinks.bug) {
-      FEEDBACK_CATEGORIES.set('bug', '🪲 Bug');
+      feedbackCategories.set('bug', '🪲 Bug');
     }
   } else {
     feedbackLinks = (await window.getFeedbackLinks()) ?? {};
     if (Object.keys(feedbackLinks).length > 0) {
-      FEEDBACK_CATEGORIES.set('other', '❓ Other');
+      feedbackCategories.set('other', '❓ Other');
     }
   }
 });
@@ -86,7 +86,7 @@ onMount(async () => {
     <div class="relative text-[var(--pd-modal-text)] px-10 pt-4">
       <label for="category" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Category</label>
       <Dropdown name="category" bind:value={category}
-      options={Array.from(FEEDBACK_CATEGORIES).map(e => ({ value: e[0], label: e[1] }))}>
+      options={Array.from(feedbackCategories).map(e => ({ value: e[0], label: e[1] }))}>
       </Dropdown>
     </div>
 

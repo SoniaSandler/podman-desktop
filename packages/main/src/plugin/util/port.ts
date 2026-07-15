@@ -72,15 +72,23 @@ export async function getFreePortRange(rangeSize: number): Promise<string> {
   return `${startPort}-${port - 1}`;
 }
 
-function isFreeAddressPort(address: string, port: number): Promise<boolean> {
+function isFreeAddressPort(address: string, port: number, skipUnreachable = false): Promise<boolean> {
   const server = net.createServer();
   return new Promise((resolve, reject) =>
     server
       .on('error', (error: NodeJS.ErrnoException) => {
+        console.log(error.code);
         if (error.code === 'EADDRINUSE') {
           reject(new Error(`Port ${port} is already in use.`));
         } else if (error.code === 'EACCES') {
           reject(new Error('Operation require administrative privileges.'));
+        } else if (
+          skipUnreachable &&
+          (error.code === 'EADDRNOTAVAIL' || error.code === 'ENETUNREACH' || error.code === 'EINVAL')
+        ) {
+          // Interface is not available for binding (e.g., VPN XFRM interfaces)
+          // Consider the port free on this interface since we cannot bind to it anyway
+          resolve(true);
         } else {
           reject(new Error(`Failed to check port status: ${error}`));
         }
@@ -101,7 +109,8 @@ export async function isFreePort(port: number): Promise<boolean> {
 
   await isFreeAddressPort('localhost', port);
   await isFreeAddressPort('0.0.0.0', port);
-  await Promise.all(intfs.map(intf => isFreeAddressPort(intf, port)));
+  // Skip unreachable interfaces (e.g., VPN XFRM interfaces that don't support binding)
+  await Promise.all(intfs.map(intf => isFreeAddressPort(intf, port, true)));
 
   return true;
 }

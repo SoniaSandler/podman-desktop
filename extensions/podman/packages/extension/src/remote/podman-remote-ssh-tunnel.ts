@@ -87,18 +87,28 @@ export class PodmanRemoteSshTunnel {
     this.#listening = false;
 
     // release resources from a previous connection (e.g. when reconnecting)
-    // so the local socket path is free for the new server
     this.#client?.end();
     this.#server?.close();
     this.#server = undefined;
 
-    this.#client = new Client();
+    const client = new Client();
+    this.#client = client;
     this.#connected = new Promise<boolean>((resolve, _reject) => {
       this.#resolveConnected = resolve;
     });
 
-    this.#client
+    // events from a superseded client are ignored: they must not change the status
+    // or schedule a reconnect that would interrupt the current connection
+    client
       .on('ready', () => {
+        if (this.#client !== client) return;
+
+        // the connection succeeded, drop any reconnect scheduled by a previous client
+        if (this.#reconnectTimeout) {
+          clearTimeout(this.#reconnectTimeout);
+          this.#reconnectTimeout = undefined;
+        }
+
         this.#status = 'started';
 
         this.#resolveConnected(true);
@@ -107,7 +117,7 @@ export class PodmanRemoteSshTunnel {
         this.#server = net.createServer(localSocket => {
           // Create a connection to the remote socket via SSH
           try {
-            this.#client?.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
+            client.openssh_forwardOutStreamLocal(this.remotePath, (err, remoteSocket) => {
               if (err) {
                 localSocket.end();
                 return;
@@ -164,18 +174,21 @@ export class PodmanRemoteSshTunnel {
       })
       .connect(this.#sshConfig);
 
-    this.#client.on('error', err => {
+    client.on('error', err => {
       console.error('SSH connection error:', err);
+      if (this.#client !== client) return;
       this.#status = 'unknown';
       this.handleReconnect();
     });
 
-    this.#client.on('end', () => {
+    client.on('end', () => {
+      if (this.#client !== client) return;
       this.#status = 'stopped';
       this.handleReconnect();
     });
 
-    this.#client.on('close', () => {
+    client.on('close', () => {
+      if (this.#client !== client) return;
       this.#status = 'stopped';
       this.handleReconnect();
     });

@@ -27,7 +27,7 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import { PodmanBinary } from '/@/utils/podman-binary';
-import { DockerCompatibilityGuide } from '/@package.json' with { type: 'json' };
+import packageJson from '/@package.json' with { type: 'json' };
 
 @injectable()
 export class PodmanProvider implements Disposable {
@@ -119,10 +119,11 @@ export class PodmanProvider implements Disposable {
       },
     ];
 
-    if (DockerCompatibilityGuide) {
+    const dockerCompatibilityGuide = packageJson.product.dockerCompatibilityGuide;
+    if (dockerCompatibilityGuide) {
       providerOptions.links.splice(2, 0, {
         title: 'Docker compatibility guide',
-        url: DockerCompatibilityGuide,
+        url: dockerCompatibilityGuide,
       });
     }
 

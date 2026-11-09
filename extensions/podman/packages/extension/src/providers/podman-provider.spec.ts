@@ -23,9 +23,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
-import * as packageJson from '/@podman-package.json' with { type: 'json' };
-
-vi.mock(import('/@podman-package.json'));
+import packageJson from '/@package.json' with { type: 'json' };
 
 const PODMAN_BINARY: PodmanBinary = {
   getBinaryInfo: vi.fn(),
@@ -44,7 +42,7 @@ beforeEach(() => {
     has: vi.fn(),
     update: vi.fn(),
   });
-  vi.mocked(packageJson).DockerCompatibilityGuide = 'https://example.com/docker-compat';
+  packageJson.product.dockerCompatibilityGuide = 'https://example.com/docker-compat';
 });
 
 describe('initialisation', () => {
@@ -117,8 +115,8 @@ describe('Docker compatibility guide link', () => {
     });
   });
 
-  test('should not be added when package.json has no DockerCompatibilityGuide', async () => {
-    vi.mocked(packageJson).DockerCompatibilityGuide = '';
+  test('should not be added when package.json has no product.dockerCompatibilityGuide', async () => {
+    packageJson.product.dockerCompatibilityGuide = '';
 
     const podmanProvider = new PodmanProvider(PODMAN_BINARY);
     await podmanProvider.init();

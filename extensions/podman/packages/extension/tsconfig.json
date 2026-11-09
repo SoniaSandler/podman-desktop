@@ -16,7 +16,7 @@
     "types": ["node"],
     "paths": {
       "/@/*": ["./src/*"],
-      "/@podman-package.json": ["./package.json"]
+      "/@package.json": ["./package.json"]
     }
   },
   "include": ["src", "types/*.d.ts", "scripts"]

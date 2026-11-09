@@ -25,7 +25,7 @@ export default mergeConfig(baseConfig, {
   resolve: {
     alias: {
       '/@/': join(__dirname, 'src') + '/',
-      '/@podman-package.json': join(__dirname, 'package.json'),
+      '/@package.json': join(__dirname, 'package.json'),
     },
   },
   build: {

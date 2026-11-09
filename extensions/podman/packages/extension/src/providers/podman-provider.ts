@@ -27,7 +27,7 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import { PodmanBinary } from '/@/utils/podman-binary';
-import { DockerCompatibilityGuide } from '/@podman-package.json' with { type: 'json' };
+import { DockerCompatibilityGuide } from '/@package.json' with { type: 'json' };
 
 @injectable()
 export class PodmanProvider implements Disposable {

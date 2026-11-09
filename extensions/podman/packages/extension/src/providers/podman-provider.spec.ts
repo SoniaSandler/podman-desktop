@@ -23,9 +23,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
-import * as packageJson from '/@podman-package.json' with { type: 'json' };
+import * as packageJson from '/@package.json' with { type: 'json' };
 
-vi.mock(import('/@podman-package.json'));
+vi.mock(import('/@package.json'));
 
 const PODMAN_BINARY: PodmanBinary = {
   getBinaryInfo: vi.fn(),
